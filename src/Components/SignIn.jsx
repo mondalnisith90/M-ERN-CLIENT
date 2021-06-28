@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useHistory } from "react-router-dom";
 import EmailIcon from '@material-ui/icons/Email';
 import PasswordIcon from '@material-ui/icons/Lock';
 import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
@@ -9,9 +9,21 @@ import Footer from "./Footer";
 import signinPic from "../Images/login7.png";
 import { useState } from "react";
 import validator from "validator";
+import axios from "axios";
+import ReactLoadingAnimation from './ReactLoadingAnimation';
+import { ToastContainer, toast } from 'react-toastify';
 import("../css/SignIn.css");
 
 
+const reactToastStyle = {
+    position: "top-center",
+    autoClose: 1600,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    };
 
 
 
@@ -33,9 +45,11 @@ const SignIn = () => {
         emailError: "",
         phoneNumberError: "",
         passwordError: "",
-        confirmPasswordError: ""
+        confirmPasswordError: "",
+        serverError: ""
     });
-
+    const [showLoadingbar, setLoadingbarState] = useState(false);
+    const history = useHistory();
 
     const inputTextChange = (event) => {
         const inputFieldName = event.target.name;
@@ -47,12 +61,13 @@ const SignIn = () => {
             emailError: "",
             phoneNumberError: "",
             passwordError: "",
-            confirmPasswordError: ""
+            confirmPasswordError: "",
+            serverError: ""
         });
     }
 
     const {firstName, lastName, email, phoneNumber, password, confirmPassword } = inputFieldsData;
-    const {firstNameError, lastNameError, emailError, phoneNumberError, passwordError, confirmPasswordError } = inputFieldsError;
+    const {firstNameError, lastNameError, emailError, phoneNumberError, passwordError, confirmPasswordError, serverError } = inputFieldsError;
 
     const formValidation = () => {
         //check if users fills all the input fields currectly or not
@@ -97,11 +112,39 @@ const SignIn = () => {
     
     }
 
-    const signinFormSubmit = (event) => {
+    const signinFormSubmit = async (event) => {
         event.preventDefault();
         const isAllOk = formValidation();
         if(isAllOk){
             //send user data to server for signin
+            setLoadingbarState(true);
+            try{
+                // { withCredentials: true }
+                const url = "http://localhost:8000/users/signin";
+                const data =  {firstName: firstName, lastName: lastName, email: email, phone: phoneNumber, password: password, cpassword: confirmPassword};
+                const serverResponse = await axios.post(url, data);
+                console.log(serverResponse);
+                if(serverResponse.status == 201){
+                    toast.success("User Registration Successfull", reactToastStyle);
+                    setTimeout(() => {
+                        history.push("/login");
+                    }, 2000);
+                }
+                setLoadingbarState(false);
+            }catch(error){
+                //set server error message
+                setLoadingbarState(false);
+                toast.error("Registration Failed", reactToastStyle);
+                const serverResponse = error.response;
+                if(serverResponse){
+                    setInputFieldsError({...inputFieldsError, serverError: serverResponse.data});
+                }else{
+                    setInputFieldsError(error.message);
+                }
+               
+            }
+  
+
 
         }
     }
@@ -115,7 +158,12 @@ const SignIn = () => {
                 <div className="row_div container shadow">
                   <div className="signin_div">
                     <h2 className="sign_heading">User Registration</h2>
+                   
                     </div>
+                    <div className="d-flex justify-content-center" style={{height: "40px"}}>
+                       {showLoadingbar ? <ReactLoadingAnimation type={"bars"} color={"#08d46e"} width={50} height={40} /> : null}
+                   </div>
+                   <ToastContainer />
                     <div className="row  my-0 g-0">
                         <div className="col-lg-6 col-md-6 col-sm-10 col-sm-10 d-block m-auto ">
                             <img src={signinPic} className="img-fluid " alt="Signin img" />
@@ -124,7 +172,7 @@ const SignIn = () => {
                             <form method="POST" className="form_style" onSubmit={signinFormSubmit}>
                             
                                 <div className=" p-4">
-                                    <p className="text-center text-danger fw-bold"></p>
+                                    <p className="text-center text-danger fw-bold">{serverError}</p>
                                     <div className="row g-3 my-2">
                                         <div className="col-md-6 col-sm-12 col-12">
                                             <label htmlFor="exampleInputFirstName" className="form-label text-dark fw-bold"><PersonOutlineIcon className="metrial_icon" />First Name*</label>

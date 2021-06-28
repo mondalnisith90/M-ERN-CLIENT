@@ -8,10 +8,26 @@ import Button from '@material-ui/core/Button';
 import ContactusCardElements from "./ContactusCardElement";
 import SendIcon from '@material-ui/icons/Send';
 import { NavLink } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Footer from "./Footer";
+import axios from "axios";
 import validator from "validator";
+import { ToastContainer, toast } from 'react-toastify';
 import "../css/Contactus.css";
+
+
+
+const reactToastStyle = {
+  position: "top-center",
+  autoClose: 1600,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  progress: undefined,
+  };
+
+
 
 const Contact = () => {
 
@@ -27,18 +43,36 @@ const Contact = () => {
              firstNameError: "",
              lastNameError: "",
              emailError: "",
-             messageError: ""
+             messageError: "",
+             serverError: ""
          });
+       
+
+         const {firstName, lastName, email, message} = inputFieldsData;
+         const {firstNameError, lastNameError, emailError, messageError, serverError} = inputFieldsError;
+         //this will called when the page will loading
+         useEffect( async () => {
+           const url = "http://localhost:8000/users/data";
+           try {
+            const serverResponse = await axios.get(url, {withCredentials: true});
+            if(serverResponse.status == 200){
+              console.log(serverResponse.data);
+              const {firstName, lastName, email} = serverResponse.data;
+              setInputFieldsData({...inputFieldsData, firstName, lastName, email});
+            }
+           } catch (error) {
+           }
+           
+         }, []);
 
          const inputTextChange = (event) => {
            const inputFieldName = event.target.name;
            const inputFieldValue = event.target.value;
            setInputFieldsData({ ...inputFieldsData, [inputFieldName]: inputFieldValue });
-           setInputFieldsError({ FirstNameError: "", lastNameError: "", emailError: "", messageError: ""})
+           setInputFieldsError({ FirstNameError: "", lastNameError: "", emailError: "", messageError: "", serverError: ""})
           }
 
-         const {firstName, lastName, email, message} = inputFieldsData;
-         const {firstNameError, lastNameError, emailError, messageError} = inputFieldsError;
+        
          
          const formValidation = () => {
            if(firstName.trim().length<3){
@@ -68,7 +102,7 @@ const Contact = () => {
            }
 
            if(message.trim().length<5){
-            setInputFieldsError({...inputFieldsError, messageError: "Too short message. Write some more."});
+            setInputFieldsError({...inputFieldsError, messageError: "Too short message. Write more."});
             return false;
            }
 
@@ -77,13 +111,30 @@ const Contact = () => {
          }
 
 
-         const sendMessageForm = (event) => {
+         const sendMessageForm = async (event) => {
            event.preventDefault();
            const isAllOk = formValidation();
            if(isAllOk){
              //send data to the server for storing user messages
-             setInputFieldsData({ ...inputFieldsData, message: "" });
-             alert("Message send");
+             const url = "http://localhost:8000/users/message";
+             const data = {firstName, lastName, email, message};
+             try {
+              const serverResponse = await axios.post(url, data, {withCredentials: true});
+              if(serverResponse.status == 200){
+                //clear the message field if message is send to sever
+                setInputFieldsData({ ...inputFieldsData, message: "" });
+                toast.success("Message Send", reactToastStyle);
+              }
+           
+             } catch (error) {
+               const serverResponse = error.response;
+               toast.error("Message not Send", reactToastStyle);
+               if(serverResponse){
+                 setInputFieldsError({...inputFieldsError, serverError: serverResponse.data});
+               }else{
+                setInputFieldsError({...inputFieldsError, serverError: error.message});
+               }
+             }
            }
          }
 
@@ -102,12 +153,12 @@ const Contact = () => {
           <div className="row2_div shadow">
             <div className="contact_heading_div">
                 <h3 className="contact_heading">Our services is always open for you</h3>
+                <ToastContainer />
             </div>
-
             <div className=" d-flex justify-content-center">
           <form method="POST" className="form_style_contact  w-100" onSubmit={sendMessageForm}>
                 <div className="pl-5 pb-5 pt-2 pr-5">
-                <p className="text-center text-danger"></p>
+                <p className="text-center text-danger">{serverError}</p>
                 <div className="row g-3 my-0 ">
                 <div className="col-md-12">
                 <label htmlFor="exampleInputFirstName" className="form-label fw-bold "><PersonOutlineIcon className="metrial_icon " />First Name*</label>

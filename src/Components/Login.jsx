@@ -3,28 +3,73 @@ import PasswordIcon from '@material-ui/icons/Lock';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Button from '@material-ui/core/Button';
 import Footer from "./Footer";
-import { NavLink } from "react-router-dom";
+import axios from "axios";
+import { NavLink, useHistory } from "react-router-dom";
 import signinImg from "../Images/login7.png"
 import { useState } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import ReactLoadingAnimation from "./ReactLoadingAnimation";
 import "../css/Login.css";
 
+
+const reactToastStyle = {
+    position: "top-center",
+    autoClose: 2000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    };
 
 const Login = () => {
 
 
     const [inputFieldsData, setInputFieldsData] = useState({ email: "", password: ""});
-
+    const [serverError, setServerError] = useState("");
+    const [showLoadingbar, setLoadingbarState] = useState(false);
     const {email, password} = inputFieldsData;
+    const history = useHistory();
+    
 
     const inputTextChange = (event) => {
         const inputFieldName = event.target.name;
         const inputFieldValue = event.target.value;
         setInputFieldsData({ ...inputFieldsData, [inputFieldName]: inputFieldValue });
+        setServerError("");
     }
 
-    const loginFormSubmit = (event) => {
+    const loginFormSubmit = async (event) => {
         event.preventDefault();
         //send data to server for user login
+        const url = "http://localhost:8000/users/login";
+        const data = {email, password};
+        setLoadingbarState(true);
+        try {
+            const serverResponse = await axios.post(url, data, {withCredentials: true});
+            if(serverResponse.status == 200){
+                
+                toast.success("login successfull", reactToastStyle);
+                setTimeout(() => {
+                    history.push("/");
+                } ,2100);
+                
+            }      
+            setLoadingbarState(false);   
+        } catch (error) {
+              //set server error message
+              setLoadingbarState(false);
+              const serverResponse = error.response;
+              toast.error(serverResponse.data, reactToastStyle);
+              if(serverResponse){
+                  setServerError(serverResponse.data);
+              }else{
+                  setServerError(error.message);
+              }
+        }
+
+
 
     }
 
@@ -35,7 +80,11 @@ const Login = () => {
                 <div className="container row_div_login shadow">
                    <div className="heading_div">
                    <h2 className="login_heading">User Login</h2>
+                   <ToastContainer />
                    </div>
+                   <div className="d-flex justify-content-center" style={{height: "40px"}}>
+                  {showLoadingbar ? <ReactLoadingAnimation type={"bars"} color={"blue"} width={50} height={40} /> : null}
+                  </div>
                     <div className="row">
                         <div className="col-lg-6 col-md-6 col-sm-10 col-sm-10 d-block m-auto ">
                             <img src={signinImg} className="img-fluid" alt="Login Img" />
@@ -43,7 +92,8 @@ const Login = () => {
                         <div className="col-lg-6 col-md-6 col-sm-10 col-sm-10 d-block m-auto">
                             <form method="POST" className="form_style_login" onSubmit={loginFormSubmit}>
                                 <div className=" p-4">
-                                    <p className="text-center text-danger fw-bold"></p>
+                                    <p className="text-center text-danger fw-bold">{serverError}</p>
+                                  
                                     <div className="row row g-3 my-2">
                                         <div className="col-md-10">
                                             <label  htmlFor="exampleInputEmail1" className="form-label text-dark fw-bold"><EmailIcon className="metrial_icon" /> Email address*</label>
@@ -71,6 +121,7 @@ const Login = () => {
                             </form>
                         </div>
                     </div>
+                    
                 </div>
                   {/* page Footer */}
 
