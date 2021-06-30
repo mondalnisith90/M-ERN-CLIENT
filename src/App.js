@@ -5,6 +5,7 @@ import Contactus from "./Components/Contactus";
 import SignIn from "./Components/SignIn";
 import Login from "./Components/Login";
 import Error from "./Components/Error";
+import Weather from "./Components/Weather";
 import {Switch, Route} from "react-router-dom";
 import("../node_modules/bootstrap/dist/css/bootstrap.min.css");
 import("../node_modules/bootstrap/dist/js/bootstrap.bundle.js");
@@ -21,6 +22,7 @@ const App = () => {
        <Route exact path="/contact" component={Contactus}/>
        <Route exact path="/signin" component={SignIn}/>
        <Route exact path="/login" component={Login}/>
+       <Route exact path="/weather" component={Weather} />
        <Route component={Error}/>
      </Switch>
     </>
