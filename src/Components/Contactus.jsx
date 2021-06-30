@@ -56,7 +56,6 @@ const Contact = () => {
            try {
             const serverResponse = await axios.get(url, {withCredentials: true});
             if(serverResponse.status == 200){
-              console.log(serverResponse.data);
               const {firstName, lastName, email} = serverResponse.data;
               setInputFieldsData({...inputFieldsData, firstName, lastName, email});
             }

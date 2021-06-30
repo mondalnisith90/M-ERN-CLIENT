@@ -11,12 +11,44 @@ import MailIcon from '@material-ui/icons/Mail';
 import PhoneInTalkIcon from '@material-ui/icons/PhoneInTalk';
 import LinkedInIcon from '@material-ui/icons/LinkedIn';
 import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import developerPic from "../Images/developer1.jpg"
-import homePic from "../Images/home1.jpg"
 import "../css/Home.css";
 
 
-const Home = () => {
+
+const Home = ({setUserLoginStatus}) => {
+
+  const [userdata, setUserData] = useState({firstName: "", lastName: "", email: ""});
+
+  const fetchUserDataFromServer = async () => {
+    try {
+      const url = "http://localhost:8000/users/data";
+      const serverResponse = await axios.get(url, {withCredentials: true});
+      if(serverResponse.status == 200){
+        //means user already loged in..
+        setUserLoginStatus(true);
+        const {firstName, lastName, email} = serverResponse.data;
+        setUserData({...userdata, firstName: firstName});
+      }else{
+        throw new Error();
+      }
+    } catch (error) {
+      //user data not get may be for internet error or available or unauthorize user
+      //new user
+      setUserLoginStatus(false);
+    }
+  }
+
+
+  
+  useEffect(() => {
+    fetchUserDataFromServer();
+  }, []);
+
+
+
     return(
         <>
           <section className="root_div_home">
@@ -26,6 +58,7 @@ const Home = () => {
                <div className="row g-0 header_row_div">
                  <div className="col-lg-7 col-md-7 col-sm-12 col-12 m-auto d-block  order-md-1 order-sm-2 order-2 mt-4">
                  <h1 className="home_heading">We all are alians in this world</h1>
+                 <h3 className="home_welcome_text">Hello  {userdata.firstName ? userdata.firstName : "Friend"}, Wellcome to our platform</h3>
                <p className="home_head_para">All that is gold does not glitter,
              Not all those who wander are lost;
               The old that is strong does not wither,
@@ -133,12 +166,6 @@ const Home = () => {
                </div>
 
              </div>
-
-             
-
-           
-
-      
 
           {/* page Footer */}
 

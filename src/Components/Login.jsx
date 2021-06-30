@@ -23,7 +23,7 @@ const reactToastStyle = {
     progress: undefined,
     };
 
-const Login = () => {
+const Login = ({setUserLoginStatus}) => {
 
 
     const [inputFieldsData, setInputFieldsData] = useState({ email: "", password: ""});
@@ -52,6 +52,7 @@ const Login = () => {
                 
                 toast.success("login successfull", reactToastStyle);
                 setTimeout(() => {
+                    setUserLoginStatus(true);
                     history.push("/");
                 } ,2100);
                 
@@ -60,17 +61,14 @@ const Login = () => {
         } catch (error) {
               //set server error message
               setLoadingbarState(false);
-              const serverResponse = error.response;
-              toast.error(serverResponse.data, reactToastStyle);
-              if(serverResponse){
-                  setServerError(serverResponse.data);
-              }else{
-                  setServerError(error.message);
-              }
+              try{
+                const serverResponse = error.response;
+                toast.error(serverResponse.data, reactToastStyle);
+                setServerError(serverResponse.data);
+              }catch(error){
+                setServerError(error.message);
+              }   
         }
-
-
-
     }
 
 

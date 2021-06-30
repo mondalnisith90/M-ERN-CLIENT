@@ -1,7 +1,33 @@
+import { useState } from "react";
 import {NavLink} from "react-router-dom";
 import("../css/Navbar.css");
 
-const Navbar = () => {
+
+const UserRegisterLogin = () => {
+  return(
+    <>
+       <li className="nav-item">
+          <NavLink className="nav-link" activeClassName="navlink_active" aria-current="page" exact to="/signin">SignIn</NavLink>
+        </li>
+
+        <li className="nav-item">
+          <NavLink className="nav-link" activeClassName="navlink_active" aria-current="page" exact to="/login">Login</NavLink>
+        </li>
+    </>
+  );
+}
+
+const UserLogout = () => {
+  return(
+    <>
+        <li className="nav-item">
+          <NavLink className="nav-link" activeClassName="navlink_active" aria-current="page" exact to="/logout">Logout</NavLink>
+        </li>
+    </>
+  );
+}
+
+const Navbar = ({userLoginStatus}) => {
     return(
     <>
    <nav className="navbar navbar-expand-lg fixed-top shadow">
@@ -26,14 +52,9 @@ const Navbar = () => {
         <li className="nav-item">
           <NavLink className="nav-link" activeClassName="navlink_active" aria-current="page" exact to="/contact">ContactUs</NavLink>
         </li>
-
-        <li className="nav-item">
-          <NavLink className="nav-link" activeClassName="navlink_active" aria-current="page" exact to="/signin">SignIn</NavLink>
-        </li>
-
-        <li className="nav-item">
-          <NavLink className="nav-link" activeClassName="navlink_active" aria-current="page" exact to="/login">Login</NavLink>
-        </li>
+          {
+            userLoginStatus ?  <UserLogout /> : < UserRegisterLogin />
+          }
         </ul>
     </div>
   </div>
